@@ -5,7 +5,9 @@ use App\Entity\Category;
 Use Symfony\Component\Routing\Annotation\Route;
 use App\Form\ArticleType;
 use App\Form\CategoryType;
+use App\Entity\CategorySearch;
 use App\Entity\PropertySearch;
+use App\Form\CategorySearchType;
 use App\Form\PropertySearchType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
@@ -68,10 +70,7 @@ class IndexController extends AbstractController
         return $this->render('articles/new.html.twig',['form' => $form->createView()]);
     }
 
-    /**
-     * @Route("/category/newCat", name="new_category")
-     * Method({"GET", "POST"})
-     */
+ 
     #[Route('/category/newCat',name:'new_category',methods:["POST","GET"])]
     public function newCategory(Request $request,FormFactoryInterface $formFactory) {
         $category = new Category();
@@ -121,7 +120,27 @@ class IndexController extends AbstractController
         return $this->render('articles/show.html.twig',array('article' => $article));
     }
     
-
+    /**
+ * @Route("/art_cat/", name="article_par_cat")
+ * Method({"GET", "POST"})
+ */
+    #[Route('/art_cat/', name: 'article_par_cat',methods: ["POST","GET"])]
+    public function articlesParCategorie(Request $request) {
+        $categorySearch = new CategorySearch();
+        $form = $this->createForm(CategorySearchType::class,$categorySearch);
+        $form->handleRequest($request);
+        $articles= [];
+        if($form->isSubmitted() && $form->isValid()) {
+            $category = $categorySearch->getCategory();
+        if ($category!="")
+            $articles= $category->getArticles();
+        else
+            $articles= $this->entityManager->getRepository(Article::class)->findAll();
+        }
+    
+        return $this->render('articles/articlesParCategorie.html.twig',['form' => $form->createView(),'articles' => $articles]);
+    }
+   
 
     // #[Route('/article/save', name: 'save')]
     // public function save() {
