@@ -5,6 +5,8 @@ use App\Entity\Category;
 Use Symfony\Component\Routing\Annotation\Route;
 use App\Form\ArticleType;
 use App\Form\CategoryType;
+use App\Entity\PriceSearch;
+use App\Form\PriceSearchType;
 use App\Entity\CategorySearch;
 use App\Entity\PropertySearch;
 use App\Form\CategorySearchType;
@@ -120,10 +122,7 @@ class IndexController extends AbstractController
         return $this->render('articles/show.html.twig',array('article' => $article));
     }
     
-    /**
- * @Route("/art_cat/", name="article_par_cat")
- * Method({"GET", "POST"})
- */
+
     #[Route('/art_cat/', name: 'article_par_cat',methods: ["POST","GET"])]
     public function articlesParCategorie(Request $request) {
         $categorySearch = new CategorySearch();
@@ -142,16 +141,20 @@ class IndexController extends AbstractController
     }
    
 
-    // #[Route('/article/save', name: 'save')]
-    // public function save() {
-    //     $article = new Article();
-    //     $article->setNom('Article 3');
-    //     $article->setPrix(00);
-    //     $this->entityManager->persist($article);
-    //     $this->entityManager->flush();
-    //     return new Response('Article enregisté avec id '.$article->getId());
-    // }
-    
+    #[Route('/art_prix/', name: 'article_par_prix',methods: ["GET","POST"])]
+    public function articlesParPrix(Request $request)
+    {
+        $priceSearch = new PriceSearch();
+        $form = $this->createForm(PriceSearchType::class,$priceSearch);
+        $form->handleRequest($request);
+        $articles= [];
+        if($form->isSubmitted() && $form->isValid()) {
+            $minPrice = $priceSearch->getMinPrice();
+            $maxPrice = $priceSearch->getMaxPrice();
+            $articles=  $this->entityManager->getRepository(Article::class)->findByPriceRange($minPrice,$maxPrice);
+        }
+        return $this->render('articles/articlesParPrix.html.twig',[ 'form' =>$form->createView(), 'articles' => $articles]);
+    }
 
 
 
