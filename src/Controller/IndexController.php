@@ -5,6 +5,8 @@ use App\Entity\Category;
 Use Symfony\Component\Routing\Annotation\Route;
 use App\Form\ArticleType;
 use App\Form\CategoryType;
+use App\Entity\PropertySearch;
+use App\Form\PropertySearchType;
 use Doctrine\ORM\EntityManagerInterface;
 use Symfony\Component\HttpFoundation\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -26,10 +28,29 @@ class IndexController extends AbstractController
 
 
     #[Route('/', name: 'article_list')]
-    public function home()
+    public function home(Request $request)
     {
+        // $articles= $this->entityManager->getRepository(Article::class)->findAll();
+        // return $this->render('articles/index.html.twig',['articles'=> $articles]);
+        $propertySearch = new PropertySearch();
+        $form = $this->createForm(PropertySearchType::class,$propertySearch);
+        $form->handleRequest($request);
+        //initialement le tableau des articles est vide,
+        //c.a.d on affiche les articles que lorsque l'utilisateur
+        //clique sur le bouton rechercher
+        $articles= [];
+        if($form->isSubmitted() && $form->isValid()) {
+        //on récupère le nom d'article tapé dans le formulaire
+
+        $nom = $propertySearch->getNom();
+        if ($nom!="")
+        //si on a fourni un nom d'article on affiche tous les articles ayant ce nom
+        $articles= $this->entityManager->getRepository(Article::class)->findBy(['Nom' => $nom] );
+        else
+        //si si aucun nom n'est fourni on affiche tous les articles
         $articles= $this->entityManager->getRepository(Article::class)->findAll();
-        return $this->render('articles/index.html.twig',['articles'=> $articles]);
+        }
+        return $this->render('articles/index.html.twig',[ 'form' =>$form->createView(), 'articles' => $articles]); 
     }
 
     #[Route('/articles/create', name: 'new_article',methods: ["POST","GET"])]
